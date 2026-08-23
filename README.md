@@ -1,0 +1,1 @@
+# jwari-pik-padtalni
