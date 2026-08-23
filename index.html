@@ -8,6 +8,7 @@
 <title>ज्वारी पीक पडताळणी</title>
 
 <style>
+
 body{
   font-family:Arial,"Nirmala UI",sans-serif;
   padding:15px;
@@ -21,6 +22,7 @@ body{
   background:white;
   padding:20px;
   border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
 }
 
 h2{
@@ -82,6 +84,7 @@ button:disabled{
   font-weight:bold;
   line-height:1.6;
 }
+
 </style>
 
 </head>
@@ -96,6 +99,7 @@ button:disabled{
 <input id="farmer" placeholder="शेतकऱ्याचे पूर्ण नाव">
 
 <label>गाव *</label>
+
 <select id="village">
   <option value="">-- गाव निवडा --</option>
   <option value="कोळविहीर">कोळविहीर</option>
@@ -114,6 +118,7 @@ button:disabled{
 <input id="mobile" type="tel" inputmode="numeric">
 
 <label>ई-पीक पाहणीतील नोंद *</label>
+
 <select id="eCrop">
   <option value="">-- निवडा --</option>
   <option value="ज्वारी">ज्वारी</option>
@@ -121,29 +126,38 @@ button:disabled{
 </select>
 
 <label>प्रत्यक्ष पाहणीतील स्थिती *</label>
+
 <select id="actualStatus">
+
   <option value="">-- निवडा --</option>
+
   <option value="ज्वारीचे पीक प्रत्यक्ष आहे">
     ज्वारीचे पीक प्रत्यक्ष आहे
   </option>
+
   <option value="ज्वारीचे पीक प्रत्यक्ष नाही">
     ज्वारीचे पीक प्रत्यक्ष नाही
   </option>
+
   <option value="काढणी झालेले/अवशेष उपलब्ध">
     काढणी झालेले / अवशेष उपलब्ध
   </option>
+
   <option value="पुढील चौकशी आवश्यक">
     पुढील चौकशी आवश्यक
   </option>
+
 </select>
 
 <label>स्थानिक शेतकऱ्यांचे बयान</label>
+
 <select id="localStatement">
   <option value="होय">होय</option>
   <option value="नाही">नाही</option>
 </select>
 
 <label>खत / बियाणे पावती पाहिली</label>
+
 <select id="receiptChecked">
   <option value="होय">होय</option>
   <option value="नाही">नाही</option>
@@ -155,6 +169,9 @@ button:disabled{
 <label>शेरा</label>
 <textarea id="remark"></textarea>
 
+
+<!-- GPS -->
+
 <div id="gps">
 📍 GPS मिळवत आहे...
 </div>
@@ -162,6 +179,9 @@ button:disabled{
 <button type="button" onclick="getGPS()">
 📍 GPS पुन्हा मिळवा
 </button>
+
+
+<!-- PHOTO -->
 
 <label>📷 प्रत्यक्ष फोटो *</label>
 
@@ -173,6 +193,9 @@ button:disabled{
 
 <img id="preview">
 
+
+<!-- SUBMIT -->
+
 <button
   type="button"
   id="submitBtn"
@@ -181,6 +204,7 @@ button:disabled{
 ✅ Submit करा
 
 </button>
+
 
 <p id="msg"></p>
 
@@ -221,6 +245,7 @@ function getGPS(){
     return;
   }
 
+
   navigator.geolocation.getCurrentPosition(
 
     function(position){
@@ -233,11 +258,13 @@ function getGPS(){
         '✅ GPS मिळाले<br><br>' +
         'Latitude: ' + lat + '<br>' +
         'Longitude: ' + lng + '<br>' +
-        'Accuracy: ' + Math.round(accuracy) + ' मीटर';
+        'Accuracy: ' +
+        Math.round(accuracy) +
+        ' मीटर';
 
     },
 
-    function(error){
+    function(){
 
       g('gps').innerHTML =
         '❌ GPS मिळाले नाही.<br><br>' +
@@ -255,7 +282,11 @@ function getGPS(){
 
 }
 
+
+/* PAGE उघडल्यावर GPS */
+
 getGPS();
+
 
 
 /* =====================================
@@ -268,18 +299,25 @@ g('photo').addEventListener('change', function(){
 
   if(!file) return;
 
+
   const reader = new FileReader();
+
 
   reader.onload = function(e){
 
-    g('preview').src = e.target.result;
-    g('preview').style.display = 'block';
+    g('preview').src =
+      e.target.result;
+
+    g('preview').style.display =
+      'block';
 
   };
+
 
   reader.readAsDataURL(file);
 
 });
+
 
 
 /* =====================================
@@ -288,69 +326,146 @@ g('photo').addEventListener('change', function(){
 
 function compressImage(file){
 
-  return new Promise(function(resolve, reject){
+  return new Promise(function(resolve,reject){
 
-    const reader = new FileReader();
+    const reader =
+      new FileReader();
 
-    reader.onload = function(event){
 
-      const img = new Image();
+    reader.onload =
+      function(event){
 
-      img.onload = function(){
+        const img =
+          new Image();
 
-        const canvas = document.createElement('canvas');
 
-        let width = img.width;
-        let height = img.height;
+        img.onload =
+          function(){
 
-        const MAX_WIDTH = 1600;
+            const canvas =
+              document.createElement('canvas');
 
-        if(width > MAX_WIDTH){
 
-          height = Math.round(
-            height * MAX_WIDTH / width
-          );
+            let width =
+              img.width;
 
-          width = MAX_WIDTH;
+            let height =
+              img.height;
 
-        }
 
-        canvas.width = width;
-        canvas.height = height;
+            const MAX_WIDTH =
+              1600;
 
-        const ctx = canvas.getContext('2d');
 
-        ctx.drawImage(
-          img,
-          0,
-          0,
-          width,
-          height
-        );
+            if(width > MAX_WIDTH){
 
-        const compressedImage =
-          canvas.toDataURL(
-            'image/jpeg',
-            0.75
-          );
+              height =
+                Math.round(
+                  height *
+                  MAX_WIDTH /
+                  width
+                );
 
-        resolve(compressedImage);
+              width =
+                MAX_WIDTH;
+
+            }
+
+
+            canvas.width =
+              width;
+
+            canvas.height =
+              height;
+
+
+            const ctx =
+              canvas.getContext('2d');
+
+
+            ctx.drawImage(
+              img,
+              0,
+              0,
+              width,
+              height
+            );
+
+
+            const compressedImage =
+              canvas.toDataURL(
+                'image/jpeg',
+                0.75
+              );
+
+
+            resolve(
+              compressedImage
+            );
+
+          };
+
+
+        img.onerror =
+          reject;
+
+
+        img.src =
+          event.target.result;
 
       };
 
-      img.onerror = reject;
 
-      img.src = event.target.result;
+    reader.onerror =
+      reject;
 
-    };
 
-    reader.onerror = reject;
-
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(
+      file
+    );
 
   });
 
 }
+
+
+
+/* =====================================
+   FORM RESET
+===================================== */
+
+function resetForm(){
+
+  g('farmer').value = '';
+
+  g('village').value = '';
+
+  g('survey').value = '';
+
+  g('area').value = '';
+
+  g('mobile').value = '';
+
+  g('eCrop').value = '';
+
+  g('actualStatus').value = '';
+
+  g('localStatement').value = 'होय';
+
+  g('receiptChecked').value = 'होय';
+
+  g('officer').value = '';
+
+  g('remark').value = '';
+
+  g('photo').value = '';
+
+  g('preview').src = '';
+
+  g('preview').style.display = 'none';
+
+}
+
 
 
 /* =====================================
@@ -361,53 +476,99 @@ async function send(){
 
   let errors = [];
 
+
   if(!g('farmer').value.trim()){
-    errors.push('शेतकऱ्याचे नाव');
+
+    errors.push(
+      'शेतकऱ्याचे नाव'
+    );
+
   }
+
 
   if(!g('village').value){
-    errors.push('गाव');
+
+    errors.push(
+      'गाव'
+    );
+
   }
+
 
   if(!g('survey').value.trim()){
-    errors.push('गट / सर्वे नंबर');
+
+    errors.push(
+      'गट / सर्वे नंबर'
+    );
+
   }
+
 
   if(!g('eCrop').value){
-    errors.push('ई-पीक नोंद');
+
+    errors.push(
+      'ई-पीक नोंद'
+    );
+
   }
+
 
   if(!g('actualStatus').value){
-    errors.push('प्रत्यक्ष पाहणीतील स्थिती');
+
+    errors.push(
+      'प्रत्यक्ष पाहणीतील स्थिती'
+    );
+
   }
+
 
   if(!g('photo').files[0]){
-    errors.push('प्रत्यक्ष फोटो');
+
+    errors.push(
+      'प्रत्यक्ष फोटो'
+    );
+
   }
 
+
   if(!lat || !lng){
-    errors.push('GPS Location');
+
+    errors.push(
+      'GPS Location'
+    );
+
   }
+
 
   if(errors.length > 0){
 
     g('msg').innerHTML =
       '⚠️ खालील माहिती आवश्यक आहे:<br><br>' +
-      errors.map(x => '❌ ' + x).join('<br>');
+      errors
+        .map(
+          x => '❌ ' + x
+        )
+        .join('<br>');
 
     return;
+
   }
 
 
-  const f = g('photo').files[0];
+  const f =
+    g('photo').files[0];
 
-  g('submitBtn').disabled = true;
+
+  g('submitBtn').disabled =
+    true;
+
 
   g('msg').innerHTML =
-    '⏳ फोटो तयार करत आहे...';
+    '⏳ फोटो Compress करत आहे...';
 
 
   try{
+
 
     /* फोटो Compress */
 
@@ -416,18 +577,28 @@ async function send(){
 
 
     g('msg').innerHTML =
-      '⏳ माहिती आणि फोटो अपलोड होत आहे...';
+      '⏳ माहिती आणि फोटो Google Drive मध्ये पाठवत आहे...';
 
 
     const data = {
 
-      farmer: g('farmer').value,
-      village: g('village').value,
-      survey: g('survey').value,
-      area: g('area').value,
-      mobile: g('mobile').value,
+      farmer:
+        g('farmer').value.trim(),
 
-      eCrop: g('eCrop').value,
+      village:
+        g('village').value,
+
+      survey:
+        g('survey').value.trim(),
+
+      area:
+        g('area').value.trim(),
+
+      mobile:
+        g('mobile').value.trim(),
+
+      eCrop:
+        g('eCrop').value,
 
       actualStatus:
         g('actualStatus').value,
@@ -439,14 +610,19 @@ async function send(){
         g('receiptChecked').value,
 
       officer:
-        g('officer').value,
+        g('officer').value.trim(),
 
       remark:
-        g('remark').value,
+        g('remark').value.trim(),
 
-      lat: lat,
-      lng: lng,
-      accuracy: accuracy,
+      lat:
+        lat,
+
+      lng:
+        lng,
+
+      accuracy:
+        accuracy,
 
       capturedAt:
         new Date().toISOString(),
@@ -466,70 +642,58 @@ async function send(){
 
 
     /* =====================================
-       SEND TO GOOGLE APPS SCRIPT
+       GOOGLE APPS SCRIPT ला SEND
+       
+       no-cors आवश्यक आहे कारण GitHub Pages
+       आणि Apps Script वेगवेगळे domains आहेत.
     ===================================== */
 
-    await fetch(URL, {
 
-      method: 'POST',
+    await fetch(
 
-      mode: 'no-cors',
+      URL,
 
-      headers: {
-        'Content-Type':
-          'text/plain;charset=utf-8'
-      },
+      {
 
-      body:
-        JSON.stringify(data)
+        method:
+          'POST',
 
-    });
+        mode:
+          'no-cors',
+
+        body:
+          JSON.stringify(data)
+
+      }
+
+    );
 
 
     /* =====================================
        SUCCESS
     ===================================== */
 
+
     g('msg').innerHTML =
-      '✅ <b>माहिती पाठविण्यात आली!</b><br>' +
-      'कृपया काही सेकंदांनी Google Sheet तपासा.';
+      '✅ <b>माहिती यशस्वीरित्या पाठविण्यात आली!</b><br><br>' +
+      '📄 Google Sheet मध्ये नोंद सेव्ह होत आहे.<br>' +
+      '📷 फोटो Google Drive मध्ये सेव्ह होत आहे.<br><br>' +
+      'कृपया काही सेकंदांनी Sheet तपासा.';
 
 
     /* FORM RESET */
 
-    g('farmer').value = '';
-
-    g('village').value = '';
-
-    g('survey').value = '';
-
-    g('area').value = '';
-
-    g('mobile').value = '';
-
-    g('eCrop').value = '';
-
-    g('actualStatus').value = '';
-
-    g('localStatement').value = 'होय';
-
-    g('receiptChecked').value = 'होय';
-
-    g('officer').value = '';
-
-    g('remark').value = '';
-
-    g('photo').value = '';
-
-    g('preview').style.display =
-      'none';
+    resetForm();
 
 
     /* नवीन GPS */
 
     lat = '';
+
     lng = '';
+
     accuracy = '';
+
 
     getGPS();
 
@@ -540,20 +704,23 @@ async function send(){
 
     console.error(error);
 
+
     g('msg').innerHTML =
       '❌ Upload Error: ' +
       error.message +
       '<br><br>' +
-      'Internet आणि Apps Script Deployment तपासा.';
+      'Internet Connection तपासा आणि पुन्हा प्रयत्न करा.';
 
   }
 
 
-  g('submitBtn').disabled = false;
+  g('submitBtn').disabled =
+    false;
 
 }
 
 </script>
 
 </body>
+
 </html>
