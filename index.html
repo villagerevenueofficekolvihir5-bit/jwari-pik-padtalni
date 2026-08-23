@@ -73,6 +73,8 @@ button:disabled{
   margin-top:12px;
   border-radius:8px;
   display:none;
+  max-height:500px;
+  object-fit:cover;
 }
 
 #msg{
@@ -121,10 +123,18 @@ button:disabled{
 <label>प्रत्यक्ष पाहणीतील स्थिती *</label>
 <select id="actualStatus">
   <option value="">-- निवडा --</option>
-  <option value="ज्वारीचे पीक प्रत्यक्ष आहे">ज्वारीचे पीक प्रत्यक्ष आहे</option>
-  <option value="ज्वारीचे पीक प्रत्यक्ष नाही">ज्वारीचे पीक प्रत्यक्ष नाही</option>
-  <option value="काढणी झालेले/अवशेष उपलब्ध">काढणी झालेले / अवशेष उपलब्ध</option>
-  <option value="पुढील चौकशी आवश्यक">पुढील चौकशी आवश्यक</option>
+  <option value="ज्वारीचे पीक प्रत्यक्ष आहे">
+    ज्वारीचे पीक प्रत्यक्ष आहे
+  </option>
+  <option value="ज्वारीचे पीक प्रत्यक्ष नाही">
+    ज्वारीचे पीक प्रत्यक्ष नाही
+  </option>
+  <option value="काढणी झालेले/अवशेष उपलब्ध">
+    काढणी झालेले / अवशेष उपलब्ध
+  </option>
+  <option value="पुढील चौकशी आवश्यक">
+    पुढील चौकशी आवश्यक
+  </option>
 </select>
 
 <label>स्थानिक शेतकऱ्यांचे बयान</label>
@@ -175,6 +185,7 @@ button:disabled{
 <p id="msg"></p>
 
 </div>
+
 
 <script>
 
@@ -228,24 +239,9 @@ function getGPS(){
 
     function(error){
 
-      let errorMessage = '';
-
-      if(error.code === 1){
-        errorMessage = '❌ Location Permission Denied';
-      }
-      else if(error.code === 2){
-        errorMessage = '❌ GPS Location उपलब्ध नाही';
-      }
-      else if(error.code === 3){
-        errorMessage = '❌ GPS मिळण्यासाठी वेळ संपला';
-      }
-      else{
-        errorMessage = '❌ GPS Error';
-      }
-
       g('gps').innerHTML =
-        errorMessage +
-        '<br><br>मोबाईल Location ON करा आणि GPS पुन्हा मिळवा बटन दाबा.';
+        '❌ GPS मिळाले नाही.<br><br>' +
+        'मोबाईल Location ON करा आणि GPS पुन्हा मिळवा बटन दाबा.';
 
     },
 
@@ -259,9 +255,6 @@ function getGPS(){
 
 }
 
-
-/* PAGE उघडल्यावर GPS */
-
 getGPS();
 
 
@@ -273,28 +266,13 @@ g('photo').addEventListener('change', function(){
 
   const file = g('photo').files[0];
 
-  if(!file){
-    return;
-  }
-
-  /* 5 MB पेक्षा मोठा फोटो */
-
-  if(file.size > 5 * 1024 * 1024){
-
-    g('msg').innerHTML =
-      '⚠️ फोटोचा आकार 5 MB पेक्षा जास्त आहे. कृपया कमी आकाराचा फोटो घ्या.';
-
-    g('photo').value = '';
-
-    return;
-  }
+  if(!file) return;
 
   const reader = new FileReader();
 
   reader.onload = function(e){
 
     g('preview').src = e.target.result;
-
     g('preview').style.display = 'block';
 
   };
@@ -302,6 +280,77 @@ g('photo').addEventListener('change', function(){
   reader.readAsDataURL(file);
 
 });
+
+
+/* =====================================
+   IMAGE COMPRESS
+===================================== */
+
+function compressImage(file){
+
+  return new Promise(function(resolve, reject){
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+      const img = new Image();
+
+      img.onload = function(){
+
+        const canvas = document.createElement('canvas');
+
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_WIDTH = 1600;
+
+        if(width > MAX_WIDTH){
+
+          height = Math.round(
+            height * MAX_WIDTH / width
+          );
+
+          width = MAX_WIDTH;
+
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          width,
+          height
+        );
+
+        const compressedImage =
+          canvas.toDataURL(
+            'image/jpeg',
+            0.75
+          );
+
+        resolve(compressedImage);
+
+      };
+
+      img.onerror = reject;
+
+      img.src = event.target.result;
+
+    };
+
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
 
 
 /* =====================================
@@ -352,15 +401,23 @@ async function send(){
 
   const f = g('photo').files[0];
 
-  const reader = new FileReader();
-
   g('submitBtn').disabled = true;
 
   g('msg').innerHTML =
-    '⏳ माहिती आणि फोटो अपलोड होत आहे...';
+    '⏳ फोटो तयार करत आहे...';
 
 
-  reader.onload = async function(e){
+  try{
+
+    /* फोटो Compress */
+
+    const imageData =
+      await compressImage(f);
+
+
+    g('msg').innerHTML =
+      '⏳ माहिती आणि फोटो अपलोड होत आहे...';
+
 
     const data = {
 
@@ -372,103 +429,127 @@ async function send(){
 
       eCrop: g('eCrop').value,
 
-      actualStatus: g('actualStatus').value,
+      actualStatus:
+        g('actualStatus').value,
 
-      localStatement: g('localStatement').value,
+      localStatement:
+        g('localStatement').value,
 
-      receiptChecked: g('receiptChecked').value,
+      receiptChecked:
+        g('receiptChecked').value,
 
-      officer: g('officer').value,
+      officer:
+        g('officer').value,
 
-      remark: g('remark').value,
+      remark:
+        g('remark').value,
 
       lat: lat,
       lng: lng,
       accuracy: accuracy,
 
-      capturedAt: new Date().toISOString(),
+      capturedAt:
+        new Date().toISOString(),
 
-      fileName: f.name,
+      fileName:
+        'JWARI_' +
+        Date.now() +
+        '.jpg',
 
-      mimeType: f.type,
+      mimeType:
+        'image/jpeg',
 
       imageBase64:
-        e.target.result.split(',')[1]
+        imageData.split(',')[1]
 
     };
 
 
-    try{
+    /* =====================================
+       SEND TO GOOGLE APPS SCRIPT
+    ===================================== */
 
-      const response = await fetch(URL, {
+    await fetch(URL, {
 
-        method: 'POST',
+      method: 'POST',
 
-        redirect: 'follow',
+      mode: 'no-cors',
 
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
+      headers: {
+        'Content-Type':
+          'text/plain;charset=utf-8'
+      },
 
-        body: JSON.stringify(data)
+      body:
+        JSON.stringify(data)
 
-      });
-
-
-      const text = await response.text();
-
-      let result;
-
-      try{
-
-        result = JSON.parse(text);
-
-      }
-      catch(parseError){
-
-        throw new Error(
-          'Server कडून योग्य प्रतिसाद मिळाला नाही.'
-        );
-
-      }
+    });
 
 
-      if(result.ok){
+    /* =====================================
+       SUCCESS
+    ===================================== */
 
-        g('msg').innerHTML =
-          '✅ <b>नोंद यशस्वीरित्या जतन झाली!</b><br>' +
-          'Google Sheet आणि Drive मध्ये माहिती सेव्ह झाली आहे.';
-
-      }
-
-      else{
-
-        g('msg').innerHTML =
-          '❌ Server Error: ' +
-          (result.error || 'Unknown Error');
-
-      }
-
-    }
-
-    catch(error){
-
-      console.error(error);
-
-      g('msg').innerHTML =
-        '❌ Upload Error: ' +
-        error.message +
-        '<br><br>' +
-        'Apps Script Web App Deployment तपासा.';
-
-    }
-
-    g('submitBtn').disabled = false;
-
-  };
+    g('msg').innerHTML =
+      '✅ <b>माहिती पाठविण्यात आली!</b><br>' +
+      'कृपया काही सेकंदांनी Google Sheet तपासा.';
 
 
-  reader.readAsDataURL(f);
+    /* FORM RESET */
+
+    g('farmer').value = '';
+
+    g('village').value = '';
+
+    g('survey').value = '';
+
+    g('area').value = '';
+
+    g('mobile').value = '';
+
+    g('eCrop').value = '';
+
+    g('actualStatus').value = '';
+
+    g('localStatement').value = 'होय';
+
+    g('receiptChecked').value = 'होय';
+
+    g('officer').value = '';
+
+    g('remark').value = '';
+
+    g('photo').value = '';
+
+    g('preview').style.display =
+      'none';
+
+
+    /* नवीन GPS */
+
+    lat = '';
+    lng = '';
+    accuracy = '';
+
+    getGPS();
+
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    g('msg').innerHTML =
+      '❌ Upload Error: ' +
+      error.message +
+      '<br><br>' +
+      'Internet आणि Apps Script Deployment तपासा.';
+
+  }
+
+
+  g('submitBtn').disabled = false;
 
 }
 
